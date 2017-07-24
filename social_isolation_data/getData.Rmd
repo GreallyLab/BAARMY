@@ -1,0 +1,244 @@
+---
+  title: "Aging Cell Composition Summary"
+author: "Andrew Johnston"
+date: "July 21, 2017"
+output:
+  html_document:
+  css: /Volumes/data/hackathon.css
+toc: yes
+toc_depth: 4
+pdf_document:
+  toc: yes
+toc_depth: '4'
+---
+
+```{r options, echo=FALSE, warning=FALSE, message = FALSE}
+source("https://bioconductor.org/biocLite.R")
+biocLite("GEOquery")
+biocLite("arrayQualityMetrics")
+library(GEOquery)
+library(arrayQualityMetrics)
+require(Biobase)
+library(dplyr)
+library(Biobase)
+library(biomaRt)
+```
+
+# Download Data for hackathon
+
+Downloaded data from several GEO series associated with the following article:
+> Cole SW, Capitanio JP, Chun K, Arevalo JM et al. Myeloid differentiation architecture of leukocyte transcriptome dynamics in perceived social isolation. Proc Natl Acad Sci U S A 2015 Dec 8;112(49):15142-7. PMID: 26598672
+
+Specifically the GEO series were GSE65213 (year 5), GSE65317 (year 8), and GSE65403 (year 10). 
+```{r get-data, fig.align="center", fig.width=9, fig.height=9, warning=FALSE, echo=TRUE, message=TRUE}
+# download the array data and place into expression sets
+
+# the beadarray differs between Y10 and Y5/Y8 so we're only using the overlapping gene names
+sum(probesets %in% probesets_Y10) # 16,421
+probesets <- probesets_Y5[probesets_Y5 %in% probesets_Y10]
+length(probesets) #16421
+sum(as.character(Table(GPLList(Y5_gse)[[1]])$ID[mymatch_Y5]) == as.character(Table(GPLList(Y10_gse)[[1]])$ID[mymatch_Y10])) # 16421
+sum(as.character(Table(GPLList(Y5_gse)[[1]])$ID[mymatch_Y5]) == probesets) # 16421
+
+##### year 5 - GSE65213 #####
+Y5_gse <- getGEO("GSE65213",GSEMatrix=FALSE)
+# platform check
+Y5_gse_platforms <- sapply(GSMList(Y5_gse),function(x) {Meta(x)$platform})
+table(Y5_gse_platforms)
+# 
+Table(GSMList(Y5_gse)[[1]])[1:5,]
+Columns(GSMList(Y5_gse)[[1]])[1:5,]
+
+probesets_Y5 <- Table(GPLList(Y5_gse)[[1]])$ID
+mymatch_Y5 <- match(probesets,Table(GPLList(Y5_gse)[[1]])$ID)
+
+data.matrix_Y5 <- do.call('cbind',lapply(GSMList(Y5_gse),function(x) {tab <- Table(x)
+mymatch_Y5 <- match(probesets,tab$ID_REF)
+return(tab$VALUE[mymatch_Y5])
+}))
+dim(data.matrix_Y5) # 16421
+
+data.matrix_Y5 <- apply(data.matrix_Y5,2,function(x) {as.numeric(as.character(x))})
+# make a density graph to see if normalized data or not
+l_dens_Y5 <- apply(na.omit(data.matrix_Y5), 2, function(x) {density(x)})
+plot(l_dens_Y5[[1]], xlim=c(0,1000), 
+     main='Densities altogether') # plot the first density
+for(i in 2:length(l_dens_Y5)){          # Add the lines to the existing plot
+  lines(l_dens_Y5[[i]], col=i)          
+}
+
+samp_names_Y5 <-NULL
+for (i in 1:length(Y5_gse@gsms)){
+samp_names_Y5[i] <- paste(unlist(strsplit(
+  x= Y5_gse@gsms[[i]]@header$title, split="-"))[1:2], collapse="_")
+}
+
+metadata_Y5 <- NULL
+for (i in 1:length(Y5_gse@gsms)){
+  meta_names <- do.call(rbind,strsplit(Y5_gse@gsms[[i]]@header$characteristics_ch1, split = ": "))[,1]
+  meta_values <- do.call(rbind,strsplit(Y5_gse@gsms[[i]]@header$characteristics_ch1, split = ": "))[,2]
+  names(meta_values) <- meta_names
+  metadata_Y5 <-rbind(metadata_Y5,meta_values)
+}
+rownames(metadata_Y5)<-NULL
+pdata_Y5 <- data.frame(metadata_Y5)
+rownames(pdata_Y5) <- samp_names
+
+rownames(data.matrix_Y5) <- probesets
+colnames(data.matrix_Y5) <- samp_names
+head(data.matrix_Y5)
+head(pdata_Y5)
+pheno_Y5 <- as(pdata_Y5,"AnnotatedDataFrame")
+eset_Y5 <- new('ExpressionSet',exprs=data.matrix_Y5,phenoData=pheno_Y5)
+eset_Y5
+saveRDS(eset_Y5,"eset_Y5.rds")
+
+## download
+##### year 10 - GSE65403 #####
+Y10_gse <- getGEO("GSE65403",GSEMatrix=FALSE)
+# platform check
+Y10_gse_platforms <- sapply(GSMList(Y10_gse),function(x) {Meta(x)$platform})
+table(Y10_gse_platforms)
+# 
+Table(GSMList(Y10_gse)[[1]])[1:5,]
+Columns(GSMList(Y10_gse)[[1]])[1:2,]
+
+probesets_Y10 <- Table(GPLList(Y10_gse)[[1]])$ID
+mymatch_Y10 <- match(probesets,Table(GPLList(Y10_gse)[[1]])$ID)
+
+data.matrix_Y10 <- do.call('cbind',lapply(GSMList(Y10_gse),function(x) {tab <- Table(x)
+mymatch_Y10 <- match(probesets,tab$ID_REF)
+return(tab$VALUE[mymatch_Y10])
+}))
+dim(data.matrix_Y10) # 16421
+
+data.matrix_Y10 <- apply(data.matrix_Y10,2,function(x) {as.numeric(as.character(x))})
+# make a density graph to see if normalized data or not
+l_dens_Y10 <- apply(na.omit(data.matrix_Y10), 2, function(x) {density(x)})
+plot(l_dens_Y10[[1]], xlim=c(0,1000), 
+     main='Densities altogether') # plot the first density
+for(i in 2:length(l_dens_Y10)){          # Add the lines to the existing plot
+  lines(l_dens_Y10[[i]], col=i)          
+}
+
+samp_names_Y10 <-NULL
+for (i in 1:length(Y10_gse@gsms)){
+samp_names_Y10[i] <- paste(unlist(strsplit(
+  x= Y10_gse@gsms[[i]]@header$title, split="-"))[1:2], collapse="_")
+}
+
+metadata_Y10 <- NULL
+for (i in 1:length(Y10_gse@gsms)){
+  meta_names <- do.call(rbind,strsplit(Y10_gse@gsms[[i]]@header$characteristics_ch1, split = ": "))[,1]
+  meta_values <- do.call(rbind,strsplit(Y10_gse@gsms[[i]]@header$characteristics_ch1, split = ": "))[,2]
+  names(meta_values) <- meta_names
+  metadata_Y10 <-rbind(metadata_Y10,meta_values)
+}
+rownames(metadata_Y10)<-NULL
+pdata_Y10 <- data.frame(metadata_Y10)
+rownames(pdata_Y10) <- samp_names_Y10
+
+rownames(data.matrix_Y10) <- probesets
+colnames(data.matrix_Y10) <- samp_names_Y10
+head(data.matrix_Y10)
+head(pdata_Y10)
+pheno_Y10 <- as(pdata_Y10,"AnnotatedDataFrame")
+eset_Y10 <- new('ExpressionSet',exprs=data.matrix_Y10,phenoData=pheno_Y10)
+eset_Y10
+saveRDS(eset_Y10,"eset_Y10.rds")
+
+
+##### download year 8 - GSE65317 #####
+Y8_gse <- getGEO("GSE65317",GSEMatrix=FALSE)
+# platform check
+Y8_gse_platforms <- sapply(GSMList(Y8_gse),function(x) {Meta(x)$platform})
+table(Y8_gse_platforms)
+# 
+Table(GSMList(Y8_gse)[[1]])[1:5,]
+Columns(GSMList(Y8_gse)[[1]])[1:2,]
+
+probesets_Y8 <- Table(GPLList(Y8_gse)[[1]])$ID
+mymatch_Y8 <- match(probesets,Table(GPLList(Y8_gse)[[1]])$ID)
+
+data.matrix_Y8 <- do.call('cbind',lapply(GSMList(Y8_gse),function(x) {tab <- Table(x)
+mymatch_Y8 <- match(probesets,tab$ID_REF)
+return(tab$VALUE[mymatch_Y8])
+}))
+dim(data.matrix_Y8) # 16421
+
+data.matrix_Y8 <- apply(data.matrix_Y8,2,function(x) {as.numeric(as.character(x))})
+# make a density graph to see if normalized data or not
+l_dens_Y8 <- apply(na.omit(data.matrix_Y8), 2, function(x) {density(x)})
+plot(l_dens_Y8[[1]], xlim=c(0,1000), 
+     main='Densities altogether') # plot the first density
+for(i in 2:length(l_dens_Y8)){          # Add the lines to the existing plot
+  lines(l_dens_Y8[[i]], col=i)          
+}
+
+samp_names_Y8 <-NULL
+for (i in 1:length(Y8_gse@gsms)){
+samp_names_Y8[i] <- paste(unlist(strsplit(
+  x= Y8_gse@gsms[[i]]@header$title, split="-"))[1:2], collapse="_")
+}
+
+metadata_Y8 <- NULL
+for (i in 1:length(Y8_gse@gsms)){
+  meta_names <- do.call(rbind,strsplit(Y8_gse@gsms[[i]]@header$characteristics_ch1, split = ": "))[,1]
+  meta_values <- do.call(rbind,strsplit(Y8_gse@gsms[[i]]@header$characteristics_ch1, split = ": "))[,2]
+  names(meta_values) <- meta_names
+  metadata_Y8 <-rbind(metadata_Y8,meta_values)
+}
+rownames(metadata_Y8)<-NULL
+pdata_Y8 <- data.frame(metadata_Y8)
+rownames(pdata_Y8) <- samp_names_Y8
+
+rownames(data.matrix_Y8) <- probesets
+colnames(data.matrix_Y8) <- samp_names_Y8
+head(data.matrix_Y8)
+head(pdata_Y8)
+pheno_Y8 <- as(pdata_Y8,"AnnotatedDataFrame")
+eset_Y8 <- new('ExpressionSet',exprs=data.matrix_Y8,phenoData=pheno_Y8)
+eset_Y8
+saveRDS(eset_Y8,"eset_Y8.rds")
+
+# how many of the sample names are the same?
+
+sum(samp_names_Y5 %in% samp_names_Y8) # 59
+sum(samp_names_Y5 %in% samp_names_Y10) # 58
+sum(samp_names_Y8 %in% samp_names_Y10) # 75
+
+
+
+#### Probe check ### 
+ensembl <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", 
+                   dataset = "hsapiens_gene_ensembl", 
+                   host = "jul2016.archive.ensembl.org")
+a <- getBM(attributes = c("illumina_humanht_12_v4","hgnc_symbol"),
+             filters = "hgnc_symbol",
+             values = as.character(probesets),
+             mart = ensembl)
+as.character(probesets_Y10)
+class(probesets_Y10)
+head(probesets_Y10)
+length(probesets_Y10)
+head(a)
+dim(a) # 41282
+class(a$hgnc_symbol)
+sum(!duplicated(a$hgnc_symbol)) # 11017
+sum(duplicated(probesets)) # 0
+not_HUGO <- probesets[!(as.character(probesets) %in% a$hgnc_symbol)]
+length(not_HUGO)
+head(not_HUGO)
+
+a <- a %>% mutate(illumina_humanht_12_v4 = replace(illumina_humanht_12_v4, illumina_humanht_12_v4 =="", NA))
+b <- a %>% filter(!is.na(illumina_humanht_12_v4)) # remove NA
+(missing_ctra = setdiff(ctra, b$hgnc_symbol))
+
+# emptying namespace
+rm(list=ls())
+```
+
+
+
+
+
