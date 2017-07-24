@@ -1,9 +1,11 @@
 #to generate 2 random plots
+attach(mtcars)
 par(mfrow=c(1,2))
 plot(wt, mpg, main="Scatterplot Example", 
             xlab="Car Weight ", ylab="Miles Per Gallon ", pch=19)
 plot(wt, hp, main= "Scatterplot Example 2", xlab="Car Weight", ylab="HP", pch=19)
 
+mtcars <- mtcars
 
 par (mfrow = c(1, 2))
 arrows2D(x0 = runif(10), y0 = runif(10),
@@ -41,7 +43,7 @@ arrows3D(x0 = wt, y0 = cyl, z0 = hp,
                                        colkey = list(length = 0.5, width = 0.5, cex.clab = 0.75))
                   )
  
- 
+ ######
  with(quakes, scatter3D(x = long, y = lat, z = -depth, colvar = mag, 
                                pch = 16, cex = 1.5, xlab = "longitude", ylab = "latitude", 
                                zlab = "depth, km", clab = c("Richter","Magnitude"),
@@ -49,4 +51,6 @@ arrows3D(x0 = wt, y0 = cyl, z0 = hp,
                                type = "h", theta = 10, d = 2, 
                                colkey = list(length = 0.5, width = 0.5, cex.clab = 0.75))
              )
+ quakes <- quakes
+ #####
 
