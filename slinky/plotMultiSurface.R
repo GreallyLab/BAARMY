@@ -1,8 +1,13 @@
-plotMultiSurface = function(data1, data2, group, plot_content1, plot_content2){
+@param object1 
+
+plotMultiSurface = function(object1, object2, group, 
+                            object1_axis_one="PC1", object1_axis_two="PC2",
+                            object2_axis_one="PC1", object2_axis_two="PC2")
+  {
   # 1. check if the order of the data are the same
   if(!all.equal(rownames(data1),rownames(data2))|all.equal(rownames(data1),rownames(group))){
     message("sample ID doesn't match, please check the rownames of your input")
-  }
+    }
   nGroup = length(unique(group$group))
   print(paste0("there are ",nrow(data1)," individuals forming ",nGroup," groups of clusters"))
   
