@@ -1,7 +1,9 @@
 install.packages("shinythemes")
 library(shinythemes)
 
-slinky_live <- function(obj1, obj2=NULL, settings = sleuth_live_settings(),
+obj1 <- readRDS("eset_Y5.rds")
+
+slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
                         options = list(port = 42427), ...) {
   
   if(!(is(obj1, 'ExpressionSet'))){
@@ -20,6 +22,18 @@ slinky_live <- function(obj1, obj2=NULL, settings = sleuth_live_settings(),
   }
   
   # insert code to manipulate the esets here 
+  # get pheno data
+  obj1_pheno <- pData(obj1)
+  obj2_pheno <- pData(obj2)
+  
+  obj1_pheno[,1] <- as.character(obj1_pheno[,1])
+  col_factor1 <- NULL
+  for (i in 1:ncol(obj1_pheno)){
+    col_factor1[i] <- is.factor(obj1_pheno[,i])
+  }
+  col_factor1 
+  obj1_var <- varLabels(obj1)[col_factor1]
+
   
   p_layout <- navbarPage(
     a('slinky', href = 'https://github.com/GreallyLab/BAARMY', target = '_blank',
