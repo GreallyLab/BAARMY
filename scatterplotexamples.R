@@ -5,6 +5,17 @@ plot(wt, mpg, main="Scatterplot Example",
 plot(wt, hp, main= "Scatterplot Example 2", xlab="Car Weight", ylab="HP", pch=19)
 
 
+par (mfrow = c(1, 2))
+arrows2D(x0 = runif(10), y0 = runif(10),
+         x1 = runif(10), y1 = runif(10), colvar = 1:10,
+         code = 3, main = "arrows2D")
+
+
+arrows3D(x0 = wt, y0 = cyl, z0 = hp,
+         x1 = wt, y1 = qsec, z1 = hp,
+         colvar = 1:32, code = 1:3, main = "arrows3D", colkey = FALSE)
+
+
 # second way: add dots on bottom and left panel
   # before the scatters are drawn, 
   # add small dots on basal plane and on the depth plane
