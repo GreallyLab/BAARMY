@@ -108,4 +108,5 @@ plotMultiSurface = function(object1, object2, group1=NULL,group2=NULL,
                lty=ifelse(group_line[i]=="unmatched",2,1),
                lwd=ifelse(group_line[i]=="unmatched",2,1))
   }
+  output <- recordPlot()
 }

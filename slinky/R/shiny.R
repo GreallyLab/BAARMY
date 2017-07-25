@@ -1,12 +1,36 @@
 ### To run demo: slinky_live(obj1, obj2) ###
 
+
+
+group1 <- obj1_pheno[,colnames(obj1_pheno)=="female"]
+group2 <- obj2_pheno[,colnames(obj2_pheno)=="female"]
+axis_choice
+object1_axis_one <- axis_choice[1]
+object1_axis_two <- axis_choice[2]
+object2_axis_one <- axis_choice[1]
+object2_axis_two <- axis_choice[2]
+d3_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
+                            object1_axis_one=object1_axis_one, object1_axis_two=object1_axis_two,
+                            object2_axis_one=object2_axis_one, object2_axis_two=object2_axis_two)
+class(d3_plot)
+plot.new()
+
+??scatterplot3d
+
 #install.packages("shinythemes")
+#install.packages("scatterplot3d")
+library(scatterplot3d)
 library(shinythemes)
+library(RColorBrewer)
 library(ggplot2)
 source("R/plotMultiSurface.R")
 
 obj1 <- readRDS("../social_isolation_data/eset_Y5.rds")
 obj2 <- readRDS("../social_isolation_data/eset_Y10.rds")
+
+obj1 <- readRDS("../social_isolation_data/eset_Y5_ov.rds")
+obj2 <- readRDS("../social_isolation_data/eset_Y10_ov.rds")
+
 
 
 slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
@@ -25,6 +49,10 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   if ( !require('shinythemes') ) {
     stop("'slinky_live()' requires 'shinythemes'. Please install it using
          install.packages('shinythemes')")
+  }
+  if ( !require('RColorBrewer') ) {
+    stop("'slinky_live()' requires 'RColorBrewer'. Please install it using
+         install.packages('RColorBrewer')")
   }
 
   # insert code to manipulate the esets here
@@ -47,21 +75,22 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
     col_factor2[i] <- is.factor(obj2_pheno[,i])
   }
   obj2_var <- varLabels(obj2)[col_factor2]
-  # get only groups in both eSETS
+  # get factors present in both eSETS
   idx_var_same <- which(obj2_var %in% obj1_var)
   pheno_both <- obj2_var[idx_var_same]
 
-  # calculate
+  # run PCA on expression data
   obj1_expr <- exprs(obj1)
   obj2_expr <- exprs(obj2)
 
   pca1 <- prcomp(na.omit(obj1_expr))$rotation
   pca2 <- prcomp(na.omit(obj2_expr))$rotation
 
-  # get axis choices
+  # get axis choices for ui
   axis_choice <- colnames(pca1)
 
-  # PC matrices, group to color by, PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
+  # Things needed for plot function:
+  #PC matrices, group to color by, PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
 
   # generate the UI using this command
   p_layout <- navbarPage(
@@ -118,8 +147,8 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
           plotOutput('d3_plot')
         ),
         fluidRow(
-          div(align = "right", style = "margin-right:15px; margin-bottom:10px",
-              downloadButton("download_3d_plot", "Download Plot")))
+          uiOutput("download_3d_plot_button")
+        )
       )
     )
   )
@@ -153,11 +182,16 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
     plot_button <- eventReactive(input$plot_3d_go, {
       group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
       group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
-      d3_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
+      saved_plots_and_tables$d3_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
                                   object1_axis_one=input$obj1_x , object1_axis_two=input$obj1_y,
                                   object2_axis_one=input$obj2_x, object2_axis_two=input$obj2_y)
-      saved_plots_and_tables$d3_plot <- d3_plot
-      d3_plot
+      # generate the download button
+      output$download_3d_plot_button <- renderUI({
+        div(
+          align = "right",
+          downloadButton("download_3d_plot", "Download Plot"))
+      })
+      saved_plots_and_tables$d3_plot
     })
 
     # generate the plot filler
@@ -167,18 +201,17 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
 
     # download plot pdf filler
     output$download_3d_plot <- downloadHandler(
-      filename = function() {
-        "threeD_plot.pdf"
-      },
+      filename = function() {"threeD_plot.pdf"},
       content = function(file) {
-        ggsave(file, saved_plots_and_tables$d3_plot,
-               width = user_settings$save_width,
-               height = user_settings$save_height,
-               units = "cm")
-      })
+        pdf(file, width = 6,height = 4)
+        print(d3_plot)
+        dev.off()
+      },
+      contentType = "pdf")
   }
 
   # initilize shiny
-  shinyApp(ui = p_layout, server = server_fun)
+  shinyApp(ui = p_layout, server = server_fun, options = "launch.browser")
 }
 
+slinky_live(obj1, obj2)
