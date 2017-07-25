@@ -9,6 +9,8 @@ list_sample[[3]] <- obj3
 
 list_esets <- list_sample
 
+source("R/plotMultiSurface_test.R")
+
 slinky_scale_live <- function(list_esets, cell_prop=NULL,
                         options = list(port = 42427), ...) {
   if(!(is(list_esets, 'list'))){
@@ -89,15 +91,25 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                                  selectInput('groupby', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
                           )
                         ),
+                        lapply(1:5, function(i) {
+                          fluidRow(
+                            column(3, offset = 3,
+                              selectInput(paste0('a', i), paste0('SelectA', i),
+                                      choices = sample(LETTERS, 5))),
+                            column(3, offset = 3,
+                            selectInput(paste0('a', i), paste0('SelectA', i),
+                                        choices = sample(LETTERS, 5))
+                        })
+
                         for (k in 1:length(list_esets)){
                           fluidRow(
                             column(3, offset = 3,
-                                 selectInput(paste("obj",k,"x", sep="_"),
+                                 selectInput(inputId=paste("obj",k,"x", sep="_"),
                                              label = paste("object",k,"x-axis:", sep=" "),
                                              choices = axis_choice,
                                              selected = NULL)),
                             column(3, offset = 3,
-                                 selectInput(paste("obj",k,"y", sep="_"),
+                                 selectInput(inputId=paste("obj",k,"y", sep="_"),
                                              label = paste("object",k,"y-axis:", sep=" "),
                                              choices = axis_choice,
                                              selected = NULL))
@@ -167,7 +179,9 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
       group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
       group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
 
-      saved_plots_and_tables$d3_plot <- plotMultiSurfaceScaled(cur_list, l_pheno, l_axis)
+      saved_plots_and_tables$d3_plot <- plotMultiSurface_scale(matrixList=cur_list,
+                                                               groupList=l_pheno,
+                                                               axisList=l_axis)
 
       # generate the download button
       output$download_3d_plot_button <- renderUI({

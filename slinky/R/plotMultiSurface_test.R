@@ -3,7 +3,7 @@
 #' @param axisList The list containing all the information you want to plot on the first and second axis
 #' @import scatterplot3d
 #' @import RColorBrewer
-plotMultiSurface = function(matrixList, groupList, axisList)
+plotMultiSurface_scale = function(matrixList, groupList, axisList)
 {
   options(scipen=99)
 

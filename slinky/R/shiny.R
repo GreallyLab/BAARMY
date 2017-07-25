@@ -7,6 +7,7 @@ library(scatterplot3d)
 library(shinythemes)
 library(RColorBrewer)
 library(ggplot2)
+library(Cairo)
 source("R/plotMultiSurface.R")
 
 # obj1 <- readRDS("../social_isolation_data/eset_Y5.rds")
@@ -136,7 +137,13 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
           )
         ),
         fluidRow(
-          plotOutput('d3_plot')
+          plotOutput('d3_plot',
+                     click = "plot1_click",
+                     brush = brushOpts(
+                       id = "plot1_brush"
+                     ) # add the brush opts here
+          )
+
         ),
         fluidRow(
           uiOutput("download_3d_plot_button")
