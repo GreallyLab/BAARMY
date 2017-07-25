@@ -1,6 +1,18 @@
 ## Cibersort function 
 
-cibersortAdjust <- function(fileNames="CIBERSORT*"){
+#' getCibersortPCs
+#'
+#' Reads CSV files generated from Cibersort that contain cell proportion data.
+#' Saves RDS files for each input file that contain the top 5 PCs.
+#'
+#' @param fileNames Specify a name pattern to search (via Sys.glob) for TIFF files of interest within the same directory.
+#' 
+#' @return an RDS file containing top 5 PCs from cell proportion data
+#'
+#' @export
+
+
+getCibersortPCs <- function(fileNames="CIBERSORT*"){
   library(readr)
   if (grepl("*", fileNames)){
     fnames <- Sys.glob(paste0(fileNames))
@@ -8,6 +20,8 @@ cibersortAdjust <- function(fileNames="CIBERSORT*"){
     fnames <- read_csv(paste(fileNames))
   }
   fnames1 <- gsub(".csv", "", fnames, fixed = TRUE)
+  fnames1 <- gsub("CIBERSORT", "", fnames, fixed = TRUE)
+  
   for(fileN in 1:length(fnames)){
     assign(fnames1[fileN], read_csv(paste(fnames[fileN])));
   }
@@ -29,5 +43,5 @@ cibersortAdjust <- function(fileNames="CIBERSORT*"){
   };
   
 }
-cibersortAdjust()
+getCibersortPCs()
 

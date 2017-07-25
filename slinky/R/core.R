@@ -5,7 +5,7 @@
 #' Reads CSV files generated from Cibersort that contain cell proportion data.
 #' Saves RDS files for each input file that contain the top 5 PCs.
 #'
-#' @param fileNames Specify a name pattern to search (via Sys.glob) for TIFF files of interest within the same directory.
+#' @param fileNames Specify a name pattern to search (via Sys.glob) for Cibersort files of interest (by default, within the same directory).
 #'
 #' @return an RDS file containing top 5 PCs from cell proportion data
 #'

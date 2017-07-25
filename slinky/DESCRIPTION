@@ -1,8 +1,8 @@
 Package: slinky
-Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
+Title: Vizualization of Multi-Dimensional Aging Data
+Version: 1.0.0.0000
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: A package for the visualization and statistical analysis of multi-dimensional aging data.
 Depends: R (>= 3.4.0)
 License: What license is it under?
 Encoding: UTF-8
