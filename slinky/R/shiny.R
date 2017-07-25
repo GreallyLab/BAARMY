@@ -13,11 +13,12 @@ source("R/plotMultiSurface.R")
 # obj2 <- readRDS("../social_isolation_data/eset_Y10.rds")
 
 #
-obj1 <- readRDS("../social_isolation_data/eset_Y5_ov.rds")
-obj2 <- readRDS("../social_isolation_data/eset_Y10_ov.rds")
+#obj1 <- readRDS("../social_isolation_data/eset_Y5_ov.rds")
+#obj2 <- readRDS("../social_isolation_data/eset_Y10_ov.rds")
 
 obj1 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y5_ov_updated.RDS")
-obj2 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y10_ov_updated.RDS")
+obj2 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y8_ov_updated.RDS")
+obj3 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y10_ov_updated.RDS")
 
 
 
@@ -184,7 +185,7 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
       output$download_3d_plot_button <- renderUI({
         div(
           align = "right",
-          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
+          style = "margin-right:20px; margin-top: 10px; margin-bottom:10px",
           downloadButton("download_3d_plot", "Download Plot"))
       })
       saved_plots_and_tables$d3_plot
