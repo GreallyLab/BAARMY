@@ -71,7 +71,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
       style = 'color: black;'),
     windowTitle = 'slinky',
     theme = shinytheme("flatly"),
-    tabPanel('overview',
+    tabPanel('Overview',
              fluidRow(
                div(h1('slinky live'), align = 'center')
              ),
@@ -81,7 +81,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                         multi-dimensional data. The Visualize tab will list the
                         visualizations available based on your input.'),
                       p(strong('Brought to you by:')),
-                      h3("Team BAARMY")
+                      p(strong("Team BAARMY"))
                       )
                )),
     navbarMenu('Visualize',

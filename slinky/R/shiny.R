@@ -53,7 +53,6 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
 
   obj2_pheno[1,]
   # get factors only for the group
-  obj1_pheno[,1] <- as.character(obj1_pheno[,1])
   col_factor1 <- NULL
   for (i in 1:ncol(obj1_pheno)){
     col_factor1[i] <- is.factor(obj1_pheno[,i])
@@ -61,7 +60,6 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
   obj1_var <- varLabels(obj1)[col_factor1]
 
   # get factors only for the group
-  obj2_pheno[,1] <- as.character(obj2_pheno[,1])
   col_factor2 <- NULL
   for (i in 1:ncol(obj2_pheno)){
     col_factor2[i] <- is.factor(obj2_pheno[,i])
@@ -90,9 +88,9 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
       style = 'color: black;'),
     windowTitle = 'slinky',
     theme = shinytheme("flatly"),
-    tabPanel('overview',
+    tabPanel('Overview',
              fluidRow(
-               div(h3('slinky live'), align = 'center')
+               div(h1('slinky live'), align = 'center')
              ),
              fluidRow(
                column(10, offset = 1,
@@ -100,8 +98,9 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
                         multi-dimensional data. The Visualize tab will list the
                         visualizations available based on your input.'),
                       p(strong('Brought to you by:')),
-                      h3("Team BAARMY")
-             ))),
+                      p(strong("Team BAARMY"))
+               )
+             )),
     navbarMenu('Visualize',
       tabPanel('3D plot',
         fluidRow(
@@ -218,6 +217,11 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
       },
       contentType = "pdf")
 
+    # TODO: fix brush click
+    output$click_info = renderPrint({
+      nearPoints(obj1_pheno,input$plot1_click,addDist = TRUE)
+    })
+
     # plot the adjusted graph for cell subtype prop
     if (!(is.null(cell_prop))){
       plot_button <- eventReactive(input$plot_adjust_go, {
@@ -246,10 +250,6 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
           dev.off()
         },
         contentType = "pdf")
-      # TODO: fix brush click
-      output$click_info = renderPrint({
-        nearPoints(obj1_pheno,input$plot1_click,addDist = TRUE)
-      })
     }
   }
 
