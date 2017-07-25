@@ -70,6 +70,7 @@ plotMultiSurface_scale = function(matrixList, groupList, axisList)
                     zlab=paste(sapply(axisList,function(x)x[2]),collapse = "/"),
                     xlim=c(min(x),max(x)),ylim=y_limit,zlim=z_limit)
 
+
   ## 5. add planes
   plane_pos = unique(x)
   for (i in 1:nPlane){
@@ -115,5 +116,12 @@ plotMultiSurface_scale = function(matrixList, groupList, axisList)
 
     }
   }
+
+  # add legend
+  legend("topleft", inset=.05,      # location and inset
+         bty="n", cex=1,              # suppress legend box, shrink text 50%
+         title=names(groupList)[1],
+         legend = unique(unlist(groupList)),
+         fill=col_point)
   output <- recordPlot()
 }
