@@ -1,5 +1,6 @@
 install.packages("shinythemes")
 library(shinythemes)
+source("~/Documents/Git/BAARMY/slinky/R/plotMultiSurface.R")
 
 obj1 <- readRDS("eset_Y5.rds")
 obj2 <- readRDS("eset_Y10.rds")
@@ -53,18 +54,20 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   obj1_expr <- exprs(obj1)
   obj2_expr <- exprs(obj2)
   
-  prcomp()
+  pca1 <- t(prcomp(t(na.omit(obj1_expr)))$rotation)
+  pca2 <- t(prcomp(t(na.omit(obj2_expr)))$rotation)
+  
+  # get axis choices
+  axis_choice <- colnames(pca1)
   
   # PC matrices, group to color by, PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
-  
-  
   
   # generate the UI using this command
   p_layout <- navbarPage(
     a('slinky', href = 'https://github.com/GreallyLab/BAARMY', target = '_blank',
       style = 'color: black;'),
     windowTitle = 'slinky',
-    theme = shinytheme("flatly")
+    theme = shinytheme("flatly"),
     tabPanel('overview',
              fluidRow(
                div(h3('slinky live'), align = 'center')
@@ -81,13 +84,32 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
     navbarMenu('Visualize',
       tabPanel('Params',
         fluidRow(
-         column(3,
+         column(6,offset = 3
           selectInput('groupby', label = 'color by:', choices = pheno_both, selected = obj1_var[1])
-         ),
-            selectInput('gv_var_color_by',
-           label = 'color by: ',
-           choices = c(NULL, poss_covars),
-           selected = NULL))
+         )
+        )
+        fluidRow(
+          column(3,
+            selectInput('obj1_x',
+            label = 'object 1 x-axis:',
+            choices = axis_choice
+            selected = NULL)),
+          column(3,
+                 selectInput('obj1_y',
+                             label = 'object 1 y-axis:',
+                             choices = axis_choice
+                             selected = NULL)),
+          column(3,
+                 selectInput('obj2_x',
+                             label = 'object 2 x-axis:',
+                             choices = axis_choice
+                             selected = NULL)),
+          column(3,
+                 selectInput('obj_y',
+                             label = 'object 1 y-axis:',
+                             choices = axis_choice
+                             selected = NULL))
+        )
       )
     )
   )
@@ -96,80 +118,53 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   server_fun <- function(input, output) {
     # Reactive master object that stores all plots and tables for downloading later
     saved_plots_and_tables <- reactiveValues(
-      pca_plt = NULL,
-      samp_heat_plt = NULL,
-      ma_plt = NULL,
-      ma_var_plt = NULL,
-      ma_table = NULL,
-      test_table = NULL,
-      volcano_plt = NULL,
-      volcano_table = NULL,
-      mv_plt = NULL,
-      scatter_plt = NULL,
-      scatter_var_plt = NULL,
-      scatter_table = NULL,
-      qq_plt = NULL,
-      cond_dens_plt = NULL,
-      samp_dens_plt = NULL,
-      sample_table = NULL,
-      kallisto_table = NULL,
-      hm_plt = NULL,
-      bs_var_plt = NULL
+      d3_plot = NULL
     )
     user_settings <- reactiveValues(save_width = 45, save_height = 11)
     # TODO: Once user settings are available, read these values from input
     
     # this is a reactive UI command.. that we may 
-    output$which_beta_ctrl_qq <- renderUI({
-      current_ui <- NULL
-      poss_tests <- list_tests(obj, input$settings_test_type)
-      if (settings$test_type == 'wt') {
-        poss_tests <- poss_tests[[input$which_model_qq]]
-        current_ui <- selectInput('which_test_qq', 'beta: ',
-                                  choices = poss_tests, selected = poss_tests[1])
-      } else {
-        # TODO: I believe this code is defunct due to the conditionalPanel()
-        current_ui <- selectInput('which_test_qq', 'test: ',
-                                  choices = poss_tests, selected = poss_tests[1])
-      }
+    #output$which_beta_ctrl_qq <- renderUI({
+    #  current_ui <- NULL
+    #  poss_tests <- list_tests(obj, input$settings_test_type)
+    #  if (settings$test_type == 'wt') {
+    #    poss_tests <- poss_tests[[input$which_model_qq]]
+    #    current_ui <- selectInput('which_test_qq', 'beta: ',
+    #                              choices = poss_tests, selected = poss_tests[1])
+    #  } else {
+    #    # TODO: I believe this code is defunct due to the conditionalPanel()
+    #    current_ui <- selectInput('which_test_qq', 'test: ',
+    #                              choices = poss_tests, selected = poss_tests[1])
+    #  }
       
-      current_ui
-    })
+    #  current_ui
+    #})
     
     # generate the plot filler 
-    output$qqplot <- renderPlot({
+    output$d3_plot <- renderPlot({
       poss_tests <- list_tests(obj, input$settings_test_type)
-      current_test <- NULL
-      if (input$settings_test_type == 'wt') {
-        poss_tests <- poss_tests[[input$which_model_qq]]
-      }
-      current_test <- poss_tests[1]
-      
-      qq_plt <- plot_qq(obj, current_test,
-                        test_type = input$settings_test_type,
-                        which_model = input$which_model_qq,
-                        sig_level = input$max_fdr_qq)
-      saved_plots_and_tables$qq_plt <- qq_plt
-      qq_plt
+      group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
+      group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
+      d3_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
+                       object1_axis_one=input$obj1_x , object1_axis_two=input$obj1_y,
+                       object2_axis_one=input$obj2_x, object2_axis_two=input$obj2_y)
+      saved_plots_and_tables$d3_plot <- d3_plot
+      d3_plot
     })
     
     # download plot pdf filler
     output$download_qq_plt <- downloadHandler(
       filename = function() {
-        "qq_plot.pdf"
+        "threeD_plot.pdf"
       },
       content = function(file) {
-        ggsave(file, saved_plots_and_tables$qq_plt,
+        ggsave(file, saved_plots_and_tables$d3_plot,
                width = user_settings$save_width,
                height = user_settings$save_height,
                units = "cm")
       })
   }
-
-  
-  obj1_var
-  
   
   # initilize shiny 
-  shinyApp(ui = p_layout, server = server_fun, options = options)
+  shinyApp(ui = p_layout, server = server_fun)
 }
