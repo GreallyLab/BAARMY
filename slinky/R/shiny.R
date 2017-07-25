@@ -1,3 +1,5 @@
+### To run demo: slinky_live(obj1, obj2) ###
+
 #install.packages("shinythemes")
 library(shinythemes)
 source("R/plotMultiSurface.R")
