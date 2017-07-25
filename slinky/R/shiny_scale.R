@@ -174,6 +174,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
         pheno <- pheno_list[[k]]
         l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby]
       }
+      names(l_pheno) <- input$groupby
 
       l_axis <-list()
       v_axis<-rep(0,2)
