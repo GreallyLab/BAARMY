@@ -113,11 +113,23 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                           )
                         ),
                         fluidRow(
-                          plotOutput('d3_plot')
+                          plotOutput('d3_plot',
+                                     click = "plot1_click",
+                                     brush = brushOpts(
+                                       id = "plot1_brush"
+                                     )
+                          )
                         ),
                         fluidRow(
-                          uiOutput("download_3d_plot_button")
+                          column(width=8,
+                                 h4("Points near click"),
+                                 verbatimTextOutput("click_info")),
+                          column(width=4,
+                                 uiOutput("download_3d_plot_button"))
                         )
+                        #fluidRow(
+                        #  uiOutput("download_3d_plot_button")
+                        #)
                ),
                if (!(is.null(cell_prop))){
                  tabPanel('Cell Proportion',
@@ -201,6 +213,10 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
         dev.off()
       },
       contentType = "pdf")
+    # TODO: fix brush click
+    output$click_info = renderPrint({
+      nearPoints(obj1_pheno,input$plot1_click,addDist = TRUE)
+    })
 
     # plot the adjusted graph for cell subtype prop
     if (!(is.null(cell_prop))){
