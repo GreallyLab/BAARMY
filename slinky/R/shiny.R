@@ -130,8 +130,10 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
                              selected = NULL))
         ),
         fluidRow(
-          actionButton('plot_3d_go', "Plot")
-          ),
+          column(10, offset= 1,
+                 actionButton('plot_3d_go', "Plot")
+          )
+        ),
         fluidRow(
           plotOutput('d3_plot')
         ),
@@ -182,7 +184,7 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
       output$download_3d_plot_button <- renderUI({
         div(
           align = "right",
-          #style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
+          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
           downloadButton("download_3d_plot", "Download Plot"))
       })
       saved_plots_and_tables$d3_plot
@@ -216,7 +218,7 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
         output$download_adjusted_plot_button <- renderUI({
           div(
             align = "right",
-            #style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
+            style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
             downloadButton("download_adjust_plot", "Download Plot"))
         })
         saved_plots_and_tables$d3_cellProp_plot
