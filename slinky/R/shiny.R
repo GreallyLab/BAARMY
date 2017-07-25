@@ -1,22 +1,6 @@
 ### To run demo: slinky_live(obj1, obj2) ###
 
-
-
-group1 <- obj1_pheno[,colnames(obj1_pheno)=="female"]
-group2 <- obj2_pheno[,colnames(obj2_pheno)=="female"]
-axis_choice
-object1_axis_one <- axis_choice[1]
-object1_axis_two <- axis_choice[2]
-object2_axis_one <- axis_choice[1]
-object2_axis_two <- axis_choice[2]
-d3_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
-                            object1_axis_one=object1_axis_one, object1_axis_two=object1_axis_two,
-                            object2_axis_one=object2_axis_one, object2_axis_two=object2_axis_two)
-class(d3_plot)
-plot.new()
-
-??scatterplot3d
-
+# install the packages
 #install.packages("shinythemes")
 #install.packages("scatterplot3d")
 library(scatterplot3d)
@@ -25,15 +9,16 @@ library(RColorBrewer)
 library(ggplot2)
 source("R/plotMultiSurface.R")
 
-obj1 <- readRDS("../social_isolation_data/eset_Y5.rds")
-obj2 <- readRDS("../social_isolation_data/eset_Y10.rds")
+# obj1 <- readRDS("../social_isolation_data/eset_Y5.rds")
+# obj2 <- readRDS("../social_isolation_data/eset_Y10.rds")
 
+#
 obj1 <- readRDS("../social_isolation_data/eset_Y5_ov.rds")
 obj2 <- readRDS("../social_isolation_data/eset_Y10_ov.rds")
 
 
 
-slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
+slinky_live <- function(obj1, obj2, cell_prop=NULL,
                         options = list(port = 42427), ...) {
 
   if(!(is(obj1, 'ExpressionSet'))){
@@ -105,14 +90,14 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
              fluidRow(
                column(10, offset = 1,
                       p('This Shiny app is designed for exploratory data analysis of
-                        multi-dimensional data. There are four menu tabs
-                        that can be used to choose plots to view'),
+                        multi-dimensional data. The menu tabs
+                        can be used to choose plots to view'),
                       p(strong('Brought to you by:')),
                       h2("Team BAARMY")
                       )
              )),
     navbarMenu('Visualize',
-      tabPanel('Params',
+      tabPanel('3D plot',
         fluidRow(
          column(6,offset = 3,
           selectInput('groupby', label = 'color by:', choices = pheno_both, selected = obj1_var[1])
@@ -149,7 +134,25 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
         fluidRow(
           uiOutput("download_3d_plot_button")
         )
-      )
+      ),
+      if (!(is.null(cell_prop))){
+        tabPanel('Cell Proportion',
+                 fluidRow(
+                   column(10, offset = 1,
+                          p("If you would like to adjust for cell type proportions
+                            please select the button below"))
+                 ),
+                 fluidRow(
+                   actionButton('plot_adjust_go', "Plot Adjusted")
+                 ),
+                 fluidRow(
+                   plotOutput('d3_adjusted_plot')
+                 ),
+                 fluidRow(
+                   uiOutput("download_adjusted_plot_button")
+                 )
+        )
+      }
     )
   )
 
@@ -158,6 +161,7 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
     # Reactive master object that stores all plots and tables for downloading later
     saved_plots_and_tables <- reactiveValues(
       d3_plot = NULL
+      d3_cellProp_plot = NULL
     )
     user_settings <- reactiveValues(save_width = 45, save_height = 11)
     # TODO: Once user settings are available, read these values from input
@@ -189,6 +193,7 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
       output$download_3d_plot_button <- renderUI({
         div(
           align = "right",
+          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
           downloadButton("download_3d_plot", "Download Plot"))
       })
       saved_plots_and_tables$d3_plot
@@ -204,7 +209,35 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
       filename = function() {"threeD_plot.pdf"},
       content = function(file) {
         pdf(file, width = 6,height = 4)
-        print(d3_plot)
+        print(saved_plots_and_tables$d3_plot)
+        dev.off()
+      },
+      contentType = "pdf")
+
+    # plot the adjusted graph for cell subtype prop
+    plot_button <- eventReactive(input$plot_adjust_go, {
+
+      group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
+      group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
+      saved_plots_and_tables$d3_cellProp_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
+                                                         object1_axis_one=input$obj1_x , object1_axis_two=input$obj1_y,
+                                                         object2_axis_one=input$obj2_x, object2_axis_two=input$obj2_y)
+      # generate the download button
+      output$download_adjusted_plot_button <- renderUI({
+        div(
+          align = "right",
+          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
+          downloadButton("download_adjust_plot", "Download Plot"))
+      })
+      saved_plots_and_tables$d3_cellProp_plot
+    })
+
+    # download cell prop adjusted plot pdf
+    output$download_adjust_plot <- downloadHandler(
+      filename = function() {"threeD_cellPropAdj_plot.pdf"},
+      content = function(file) {
+        pdf(file, width = 6,height = 4)
+        print(saved_plots_and_tables$d3_cellProp_plot) # change to real
         dev.off()
       },
       contentType = "pdf")
