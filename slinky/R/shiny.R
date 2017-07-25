@@ -97,12 +97,11 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
              fluidRow(
                column(10, offset = 1,
                       p('This Shiny app is designed for exploratory data analysis of
-                        multi-dimensional data. The menu tabs
-                        can be used to choose plots to view'),
+                        multi-dimensional data. The Visualize tab will list the
+                        visualizations available based on your input.'),
                       p(strong('Brought to you by:')),
-                      h2("Team BAARMY")
-                      )
-             )),
+                      h3("Team BAARMY")
+             ))),
     navbarMenu('Visualize',
       tabPanel('3D plot',
         fluidRow(
@@ -145,6 +144,11 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
                      )
           )
 
+        ),
+        fluidRow(
+          column(width=8,
+                 h4("Points near click"),
+                 verbatimTextOutput("click_info"))
         ),
         fluidRow(
           uiOutput("download_3d_plot_button")
@@ -242,6 +246,10 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
           dev.off()
         },
         contentType = "pdf")
+      # TODO: fix brush click
+      output$click_info = renderPrint({
+        nearPoints(obj1_pheno,input$plot1_click,addDist = TRUE)
+      })
     }
   }
 
