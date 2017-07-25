@@ -115,4 +115,5 @@ plotMultiSurface_scale = function(matrixList, groupList, axisList)
 
     }
   }
+  output <- recordPlot()
 }

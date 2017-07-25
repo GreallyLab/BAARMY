@@ -91,30 +91,22 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                                  selectInput('groupby', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
                           )
                         ),
-                        lapply(1:5, function(i) {
+                        lapply(1:length(list_esets), function(k) {
                           fluidRow(
                             column(3, offset = 3,
-                              selectInput(paste0('a', i), paste0('SelectA', i),
-                                      choices = sample(LETTERS, 5))),
-                            column(3, offset = 3,
-                            selectInput(paste0('a', i), paste0('SelectA', i),
-                                        choices = sample(LETTERS, 5))
-                        })
-
-                        for (k in 1:length(list_esets)){
-                          fluidRow(
-                            column(3, offset = 3,
-                                 selectInput(inputId=paste("obj",k,"x", sep="_"),
-                                             label = paste("object",k,"x-axis:", sep=" "),
-                                             choices = axis_choice,
-                                             selected = NULL)),
-                            column(3, offset = 3,
-                                 selectInput(inputId=paste("obj",k,"y", sep="_"),
-                                             label = paste("object",k,"y-axis:", sep=" "),
-                                             choices = axis_choice,
-                                             selected = NULL))
+                              selectInput(paste0("obj",k,"x"),
+                                          paste0("object ",k," x-axis:"),
+                                      choices = axis_choice,
+                                      selected = NULL)
+                              ),
+                              column(3, offset = 3,
+                                     selectInput(paste0("obj",k,"y"),
+                                                 paste0("object ",k," y-axis:"),
+                                                 choices = axis_choice,
+                                                 selected = NULL)
+                              )
                           )
-                        },
+                        }),
                         fluidRow(
                           column(10, offset= .5,
                                  actionButton('plot_3d_go', "Plot")
@@ -143,10 +135,11 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                           fluidRow(
                             uiOutput("download_adjusted_plot_button")
                           )
-                          )
+                        )
                }
     )
-    )
+  )
+
 
   # server function
   server_fun <- function(input, output) {
@@ -171,9 +164,10 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
       }
 
       l_axis <-list()
+      v_axis<-rep(0,2)
       for (k in 1:length(list_esets)){
-        v_axis[1] <- input[[paste("obj",k,"x", sep="_")]]
-        v_axis[2] <- input[[paste("obj",k,"y", sep="_")]]
+        v_axis[1] <- input[[paste0("obj",k,"x")]]
+        v_axis[2] <- input[[paste0("obj",k,"y")]]
         l_axis[[k]] <- v_axis
       }
       group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]

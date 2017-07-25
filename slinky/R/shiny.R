@@ -51,6 +51,7 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
   obj1_pheno <- pData(obj1)
   obj2_pheno <- pData(obj2)
 
+  obj2_pheno[1,]
   # get factors only for the group
   obj1_pheno[,1] <- as.character(obj1_pheno[,1])
   col_factor1 <- NULL
@@ -141,7 +142,7 @@ slinky_live <- function(obj1, obj2, cell_prop=NULL,
                      click = "plot1_click",
                      brush = brushOpts(
                        id = "plot1_brush"
-                     ) # add the brush opts here
+                     )
           )
 
         ),
