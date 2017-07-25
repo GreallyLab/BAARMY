@@ -4,6 +4,9 @@ library(shinythemes)
 obj1 <- readRDS("eset_Y5.rds")
 obj2 <- readRDS("eset_Y10.rds")
 
+obj1 <- readRDS("eset_Y10_ov_PC.rds")
+
+exprs(obj1)
 
 slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
                         options = list(port = 42427), ...) {
@@ -41,9 +44,19 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   for (i in 1:ncol(obj2_pheno)){
     col_factor2[i] <- is.factor(obj2_pheno[,i])
   }
-  obj2_var <- varLabels(obj2)[col_factor1]
-
-  idx_var_same <- which()
+  obj2_var <- varLabels(obj2)[col_factor2]
+  # get only groups in both eSETS
+  idx_var_same <- which(obj2_var %in% obj1_var)
+  pheno_both <- obj2_var[idx_var_same]
+  
+  # calculate
+  obj1_expr <- exprs(obj1)
+  obj2_expr <- exprs(obj2)
+  
+  prcomp()
+  
+  # PC matrices, group to color by, PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
+  
   
   
   # generate the UI using this command
@@ -69,9 +82,9 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
       tabPanel('Params',
         fluidRow(
          column(3,
-          selectInput('groupby', label = 'units:', choices = obj1_var, selected = obj1_var[1])
+          selectInput('groupby', label = 'color by:', choices = pheno_both, selected = obj1_var[1])
          ),
-            electInput('gv_var_color_by',
+            selectInput('gv_var_color_by',
            label = 'color by: ',
            choices = c(NULL, poss_covars),
            selected = NULL))
