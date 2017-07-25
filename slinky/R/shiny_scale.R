@@ -73,15 +73,15 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
     theme = shinytheme("flatly"),
     tabPanel('overview',
              fluidRow(
-               div(h3('slinky live'), align = 'center')
+               div(h1('slinky live'), align = 'center')
              ),
              fluidRow(
                column(10, offset = 1,
                       p('This Shiny app is designed for exploratory data analysis of
-                        multi-dimensional data. The menu tabs
-                        can be used to choose plots to view'),
+                        multi-dimensional data. The Visualize tab will list the
+                        visualizations available based on your input.'),
                       p(strong('Brought to you by:')),
-                      h2("Team BAARMY")
+                      h3("Team BAARMY")
                       )
                )),
     navbarMenu('Visualize',
@@ -93,13 +93,13 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                         ),
                         lapply(1:length(list_esets), function(k) {
                           fluidRow(
-                            column(3, offset = 3,
+                            column(3, offset = 2,
                               selectInput(paste0("obj",k,"x"),
                                           paste0("object ",k," x-axis:"),
                                       choices = axis_choice,
                                       selected = NULL)
                               ),
-                              column(3, offset = 3,
+                              column(3, offset = 2,
                                      selectInput(paste0("obj",k,"y"),
                                                  paste0("object ",k," y-axis:"),
                                                  choices = axis_choice,
@@ -238,3 +238,6 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
 }
 
 slinky_scale_live(list_sample)
+
+### cell proportion
+### fix the aesthetics ''/
