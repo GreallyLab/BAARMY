@@ -2,6 +2,7 @@
 
 #install.packages("shinythemes")
 library(shinythemes)
+library(ggplot2)
 source("R/plotMultiSurface.R")
 
 obj1 <- readRDS("../social_isolation_data/eset_Y5.rds")
@@ -109,7 +110,16 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
                              label = 'object 2 y-axis:',
                              choices = axis_choice,
                              selected = NULL))
-        )
+        ),
+        fluidRow(
+          actionButton('plot_3d_go', "Plot")
+          ),
+        fluidRow(
+          plotOutput('d3_plot')
+        ),
+        fluidRow(
+          div(align = "right", style = "margin-right:15px; margin-bottom:10px",
+              downloadButton("download_3d_plot", "Download Plot")))
       )
     )
   )
@@ -140,20 +150,23 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
     #  current_ui
     #})
 
-    # generate the plot filler
-    output$d3_plot <- renderPlot({
-      poss_tests <- list_tests(obj, input$settings_test_type)
+    plot_button <- eventReactive(input$plot_3d_go, {
       group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
       group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
       d3_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
-                       object1_axis_one=input$obj1_x , object1_axis_two=input$obj1_y,
-                       object2_axis_one=input$obj2_x, object2_axis_two=input$obj2_y)
+                                  object1_axis_one=input$obj1_x , object1_axis_two=input$obj1_y,
+                                  object2_axis_one=input$obj2_x, object2_axis_two=input$obj2_y)
       saved_plots_and_tables$d3_plot <- d3_plot
       d3_plot
     })
 
+    # generate the plot filler
+    output$d3_plot <- renderPlot({
+      plot_button()
+    })
+
     # download plot pdf filler
-    output$download_qq_plt <- downloadHandler(
+    output$download_3d_plot <- downloadHandler(
       filename = function() {
         "threeD_plot.pdf"
       },
