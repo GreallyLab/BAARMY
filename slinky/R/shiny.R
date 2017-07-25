@@ -1,9 +1,9 @@
-install.packages("shinythemes")
+#install.packages("shinythemes")
 library(shinythemes)
 source("R/plotMultiSurface.R")
 
-obj1 <- readRDS("eset_Y5.rds")
-obj2 <- readRDS("eset_Y10.rds")
+obj1 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y5.rds")
+obj2 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y10.rds")
 
 #obj1 <- readRDS("eset_Y10_ov_PC.rds")
 
@@ -38,6 +38,7 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   for (i in 1:ncol(obj1_pheno)){
     col_factor1[i] <- is.factor(obj1_pheno[,i])
   }
+  obj1_var <- varLabels(obj1)[col_factor1]
 
   # get factors only for the group
   obj2_pheno[,1] <- as.character(obj2_pheno[,1])
@@ -168,3 +169,4 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   # initilize shiny
   shinyApp(ui = p_layout, server = server_fun)
 }
+
