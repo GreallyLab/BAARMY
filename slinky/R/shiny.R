@@ -2,12 +2,8 @@
 library(shinythemes)
 source("R/plotMultiSurface.R")
 
-obj1 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y5.rds")
-obj2 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y10.rds")
-
-#obj1 <- readRDS("eset_Y10_ov_PC.rds")
-
-exprs(obj1)
+obj1 <- readRDS("../social_isolation_data/eset_Y5_ov_PC.rds")
+obj2 <- readRDS("../social_isolation_data/eset_Y10_ov_PC.rds")
 
 slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
                         options = list(port = 42427), ...) {
