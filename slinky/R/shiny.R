@@ -4,8 +4,9 @@
 library(shinythemes)
 source("R/plotMultiSurface.R")
 
-obj1 <- readRDS("../social_isolation_data/eset_Y5_ov_PC.rds")
-obj2 <- readRDS("../social_isolation_data/eset_Y10_ov_PC.rds")
+obj1 <- readRDS("../social_isolation_data/eset_Y5.rds")
+obj2 <- readRDS("../social_isolation_data/eset_Y10.rds")
+
 
 slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
                         options = list(port = 42427), ...) {
@@ -53,8 +54,8 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
   obj1_expr <- exprs(obj1)
   obj2_expr <- exprs(obj2)
 
-  pca1 <- t(prcomp(t(na.omit(obj1_expr)))$rotation)
-  pca2 <- t(prcomp(t(na.omit(obj2_expr)))$rotation)
+  pca1 <- prcomp(na.omit(obj1_expr))$rotation
+  pca2 <- prcomp(na.omit(obj2_expr))$rotation
 
   # get axis choices
   axis_choice <- colnames(pca1)
@@ -104,8 +105,8 @@ slinky_live <- function(obj1, obj2, settings = sleuth_live_settings(),
                              choices = axis_choice,
                              selected = NULL)),
           column(3,
-                 selectInput('obj_y',
-                             label = 'object 1 y-axis:',
+                 selectInput('obj2_y',
+                             label = 'object 2 y-axis:',
                              choices = axis_choice,
                              selected = NULL))
         )
