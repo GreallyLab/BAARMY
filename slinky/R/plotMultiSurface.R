@@ -12,6 +12,7 @@ plotMultiSurface = function(object1, object2, group1=NULL,group2=NULL,
                             object1_axis_one="PC1", object1_axis_two="PC2",
                             object2_axis_one="PC1", object2_axis_two="PC2")
   {
+  options(scipen=99)
   # 1. check if the order of the data are the same
   if(!all.equal(rownames(object1),rownames(object2))){
     message("sample ID doesn't match, please check the rownames of your input")
@@ -54,10 +55,12 @@ plotMultiSurface = function(object1, object2, group1=NULL,group2=NULL,
   z = c(object1[,object1_axis_two],object2[,object2_axis_two])
 
   range_y = max(y)-min(y)
-  y_limit = c(floor(min(y)-0.05*range_y),ceiling(max(y)+0.05*range_y))
+  y_digit = min(which(strsplit(as.character(range_y),split="",fixed=T)[[1]][-c(1:2)]>0))
+  y_limit = c(min(y)-signif(0.05*range_y,y_digit-1),max(y)+signif(0.05*range_y,digits = y_digit-1))
 
   range_z = max(z)-min(z)
-  z_limit = c(floor(min(z)-0.05*range_z),ceiling(max(z)+0.07*range_z))
+  z_digit = min(which(strsplit(as.character(range_z),split="",fixed=T)[[1]][-c(1:2)]>0))
+  z_limit = c(min(z)-signif(0.05*range_z,z_digit-1),max(z)+signif(0.05*range_z,digits = z_digit-1))
 
   p = scatterplot3d(x=x,y=y,z=z,pch=16,box=FALSE,cex.symbols=0.8,
                     xlab="dataset",ylab=paste0(object1_axis_one,"/",object2_axis_one),
