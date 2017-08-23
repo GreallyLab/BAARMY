@@ -1,5 +1,13 @@
 # slinky with scalability
 
+#' slinky_scale_live
+#'
+#' Shiny data visualization
+#'
+#' @param list_esets A list of expression sets >=2
+#'
+#' @export
+
 slinky_scale_live(list_sample)
 
 list_sample <- list()
