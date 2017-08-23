@@ -9,7 +9,7 @@ list_sample[[3]] <- obj3
 
 list_esets <- list_sample
 
-source("R/plotMultiSurface_test.R")
+source("R/plotMultiSurface.R")
 
 slinky_scale_live <- function(list_esets, cell_prop=NULL,
                         options = list(port = 42427), ...) {
@@ -17,7 +17,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
     stop("Please supply a list of expression sets for list_eset before running this command")
   }
   if(length(list_esets)<2){
-    stop(paste("You have supplied", length(list_esets), " expression sets. Please supply
+    stop(paste("You have supplied ", length(list_esets), " expression sets. Please supply
                at least two expression sets in list before running this command", sep=""))
   }
   # TODO: write stops if list is not composed of esets
@@ -166,7 +166,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
     #})
 
     plot_button <- eventReactive(input$plot_3d_go, {
-      input[[paste("obj",k,"x", sep="_")]]
+      #input[[paste("obj",k,"x", sep="_")]]
 
       # generate the pheno type list
       l_pheno <- list()
@@ -183,8 +183,9 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
         v_axis[2] <- input[[paste0("obj",k,"y")]]
         l_axis[[k]] <- v_axis
       }
-      group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
-      group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
+
+      #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
+      #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
 
       saved_plots_and_tables$d3_plot <- plotMultiSurface_scale(matrixList=cur_list,
                                                                groupList=l_pheno,
