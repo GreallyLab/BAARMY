@@ -1,5 +1,5 @@
 # This is a demo script for Slinky#
-source("R/plotMultiSurface_test.R")
+source("R/plotMultiSurface_scale.R")
 
 library(scatterplot3d)
 library(shinythemes)

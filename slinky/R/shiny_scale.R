@@ -15,7 +15,7 @@ list_sample[[1]] <- obj1
 list_sample[[2]] <- obj2
 list_sample[[3]] <- obj3
 
-list_esets <- list_sample
+list_esets <- list_sample[1:2]
 
 source("R/plotMultiSurface.R")
 
@@ -182,7 +182,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
         pheno <- pheno_list[[k]]
         l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby]
       }
-      names(l_pheno) <- input$groupby
+      names(l_pheno) <- rep(input$groupby, length(l_pheno))
 
       l_axis <-list()
       v_axis<-rep(0,2)
