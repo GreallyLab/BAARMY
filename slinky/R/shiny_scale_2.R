@@ -1,6 +1,6 @@
 # slinky with scalability
 
-#' slinky_scale_live
+#' slinky_scale_live_2
 #'
 #' Shiny data visualization
 #'
@@ -16,7 +16,7 @@ list_sample <- list()
 list_sample[[1]] <- obj1
 list_sample[[2]] <- obj2
 list_sample[[3]] <- obj3
-list_esets <- list_sample[1:2]
+list_esets <- list_sample[1:3]
 slinky_scale_live(list_sample)
 
 # need to source any functions created for testing
@@ -24,7 +24,7 @@ source("R/plotMultiSurface_scale.R")
 
 
 # this is the long slinky live function
-slinky_scale_live <- function(list_esets, cell_prop=NULL,
+slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
                         options = list(port = 42427), ...) {
   # a bunch of stop if inappropriate data given
   if(!(is(list_esets, 'list'))){
@@ -80,6 +80,9 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
 
   # Things needed for plot function:
   #list of PC matrices, group to color by, list of vectors PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
+  # cur_list = PC matrices
+  # group vectors  = group to color by
+  # axis_choice = vectors to plot by
 
   # generate the UI using this command
   p_layout <- navbarPage(
@@ -101,7 +104,11 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                       )
                )),
     navbarMenu('Visualize',
+               # non-interactive 3D plot
                tabPanel('3D plot',
+                        fluidRow(
+                          div(h1('3D Plot'), align = 'center')
+                        ),
                         fluidRow(
                           column(6,offset = 3,
                                  selectInput('groupby', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
@@ -129,11 +136,42 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                           )
                         ),
                         fluidRow(
-                          plotOutput('d3_plot',
-                                     click = "plot1_click",
-                                     brush = brushOpts(
-                                       id = "plot1_brush"
-                                     )
+                          column(width=8,
+                                 h4("Points near click"),
+                                 verbatimTextOutput("click_info")),
+                          column(width=4,
+                                 uiOutput("download_3d_plot_button"))
+                        )
+               ),
+               # interactive 3D plot using plotly
+               tabPanel('Interactive 3D plot',
+                        fluidRow(
+                          div(h1('Interactive 3D Plot'), align = 'center')
+                        ),
+                        fluidRow(
+                          column(6,offset = 3,
+                                 selectInput('groupby', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
+                          )
+                        ),
+                        lapply(1:length(list_esets), function(k) {
+                          fluidRow(
+                            column(3, offset = 2,
+                                   selectInput(paste0("obj",k,"x"),
+                                               paste0("object ",k," x-axis:"),
+                                               choices = axis_choice,
+                                               selected = NULL)
+                            ),
+                            column(3, offset = 2,
+                                   selectInput(paste0("obj",k,"y"),
+                                               paste0("object ",k," y-axis:"),
+                                               choices = axis_choice,
+                                               selected = NULL)
+                            )
+                          )
+                        }),
+                        fluidRow(
+                          column(10, offset= .5,
+                                 actionButton('plot_3d_int_go', "Plot")
                           )
                         ),
                         fluidRow(
@@ -141,11 +179,9 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
                                  h4("Points near click"),
                                  verbatimTextOutput("click_info")),
                           column(width=4,
-                                 uiOutput("download_3d_plot_button"))
+                                 uiOutput("download_3d_int_plot_button"))
                         )
-                        #fluidRow(
-                        #  uiOutput("download_3d_plot_button")
-                        #)
+
                ),
                if (!(is.null(cell_prop))){
                  tabPanel('Cell Proportion',
@@ -174,6 +210,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
     # Reactive master object that stores all plots and tables for downloading later
     saved_plots_and_tables <- reactiveValues(
       d3_plot = NULL,
+      d3_int_plot = NULL,
       d3_cellProp_plot = NULL
     )
     user_settings <- reactiveValues(save_width = 45, save_height = 11)
@@ -181,7 +218,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
     #  current_ui
     #})
 
-    plot_button <- eventReactive(input$plot_3d_go, {
+    plot_3D_button <- eventReactive(input$plot_3d_go, {
       #input[[paste("obj",k,"x", sep="_")]]
 
       # generate the pheno type list
@@ -217,12 +254,58 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
       saved_plots_and_tables$d3_plot
     })
 
-    # generate the plot filler
-    output$d3_plot <- renderPlot({
-      plot_button()
+    plot_3d_int_button <- eventReactive(input$plot_3d_int_go, {
+      #input[[paste("obj",k,"x", sep="_")]]
+
+      # generate the pheno type list
+      l_pheno <- list()
+      for (k in 1:length(list_esets)){
+        pheno <- pheno_list[[k]]
+        l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby]
+      }
+      names(l_pheno) <- rep(input$groupby, length(l_pheno))
+
+      l_axis <-list()
+      v_axis<-rep(0,2)
+      for (k in 1:length(list_esets)){
+        v_axis[1] <- input[[paste0("obj",k,"x")]]
+        v_axis[2] <- input[[paste0("obj",k,"y")]]
+        l_axis[[k]] <- v_axis
+      }
+
+      # l_axis <- list()
+      # l_axis[[1]] <- c(1,2)
+      # l_axis[[2]] <- c(1,2)
+      # l_axis[[3]] <- c(1,2)
+      #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
+      #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
+
+
+      saved_plots_and_tables$d3_int_plot <- plotMultiSurface_int_scale(matrixList=cur_list,
+                                                               groupList=l_pheno,
+                                                               axisList=l_axis)
+
+      # generate the download button
+      output$download_3d_int_plot_button <- renderUI({
+        div(
+          align = "right",
+          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
+          downloadButton("download_3d_plot", "Download Plot"))
+      })
+      saved_plots_and_tables$d3_int_plot
     })
 
-    # download plot pdf filler
+    # generate the interactive 3D plot filler
+    output$d3_int_plot <- renderPlot({
+      plot_3d_int_button()
+    })
+
+    # generate the plot filler
+    output$d3_plot <- renderPlot({
+      plot_3D_button()
+    })
+
+    # download 3D plot pdf
     output$download_3d_plot <- downloadHandler(
       filename = function() {"threeD_plot.pdf"},
       content = function(file) {
@@ -231,6 +314,17 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
         dev.off()
       },
       contentType = "pdf")
+
+    # download 3D interactive plot pdf
+    output$download_3d_int_plot <- downloadHandler(
+      filename = function() {"threeD_interactive_plot.pdf"},
+      content = function(file) {
+        pdf(file, width = 6,height = 4)
+        print(saved_plots_and_tables$d3_plot)
+        dev.off()
+      },
+      contentType = "pdf")
+
     # TODO: fix brush click
     output$click_info = renderPrint({
       nearPoints(obj1_pheno,input$plot1_click,addDist = TRUE)
@@ -271,7 +365,7 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
   shinyApp(ui = p_layout, server = server_fun, options = "launch.browser")
 }
 
-slinky_scale_live(list_sample)
+slinky_scale_live2(list_sample[1:2])
 
 ### cell proportion
 ### fix the aesthetics ''/
