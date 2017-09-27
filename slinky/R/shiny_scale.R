@@ -30,6 +30,10 @@ slinky_scale_live <- function(list_esets, cell_prop=NULL,
   if(!(is(list_esets, 'list'))){
     stop("Please supply a list of expression sets for list_eset before running this command")
   }
+  if(!(is(list_esets[[1]], 'ExpressionSet'))){
+    stop("Please supply a list of expression sets for list_eset before running this command")
+  }
+
   if(length(list_esets)<2){
     stop(paste("You have supplied only supplied 1 expression set. Please supply
                at least two expression sets in list before running this command", sep=""))

@@ -9,9 +9,23 @@
 #' @import shinythemes
 #' @import RColorBrewer
 #' @import plotly
+#' @import webshot
 #' @export
 
+install.packages("ggplot2")
 # This is just to load and test sample data; this will be removed when finished
+library(webshot)
+devtools::install_github("ropensci/plotly", force=TRUE)
+# then had to remove ggplot2
+install.packages("ggplot2")
+library(plotly)
+install.packages("RSelenium")
+library(RSelenium)
+Sys.setenv("plotly_username" = "Greally_Lab")
+Sys.setenv("plotly_api_key" = "GreallyLab1")
+
+sessionInfo()
+devtools::install_github("ropensci/plotly", force=TRUE)
 list_sample <- list()
 list_sample[[1]] <- obj1
 list_sample[[2]] <- obj2
@@ -107,11 +121,11 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
                # non-interactive 3D plot
                tabPanel('3D plot',
                         fluidRow(
-                          div(h1('3D Plot'), align = 'center')
+                          div(h1("3D Plot"), align = "center")
                         ),
                         fluidRow(
                           column(6,offset = 3,
-                                 selectInput('groupby', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
+                                 selectInput("groupby", label = "color by:", choices = eset_var_final, selected = eset_var_final[1])
                           )
                         ),
                         lapply(1:length(list_esets), function(k) {
@@ -132,14 +146,14 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
                         }),
                         fluidRow(
                           column(10, offset= .5,
-                                 actionButton('plot_3d_go', "Plot")
+                                 actionButton("plot_3d_go", "Plot")
                           )
                         ),
                         fluidRow(
-                          column(width=8,
-                                 h4("Points near click"),
-                                 verbatimTextOutput("click_info")),
-                          column(width=4,
+                          plotOutput('d3_plot')
+                        ),
+                        fluidRow(
+                          column(width=4, offset = 8,
                                  uiOutput("download_3d_plot_button"))
                         )
                ),
@@ -150,19 +164,19 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
                         ),
                         fluidRow(
                           column(6,offset = 3,
-                                 selectInput('groupby', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
+                                 selectInput('groupby_3D', label = 'color by:', choices = eset_var_final, selected = eset_var_final[1])
                           )
                         ),
                         lapply(1:length(list_esets), function(k) {
                           fluidRow(
                             column(3, offset = 2,
-                                   selectInput(paste0("obj",k,"x"),
+                                   selectInput(paste0("obj_3D",k,"x"),
                                                paste0("object ",k," x-axis:"),
                                                choices = axis_choice,
                                                selected = NULL)
                             ),
                             column(3, offset = 2,
-                                   selectInput(paste0("obj",k,"y"),
+                                   selectInput(paste0("obj_3D",k,"y"),
                                                paste0("object ",k," y-axis:"),
                                                choices = axis_choice,
                                                selected = NULL)
@@ -171,13 +185,15 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
                         }),
                         fluidRow(
                           column(10, offset= .5,
-                                 actionButton('plot_3d_int_go', "Plot")
+                                 actionButton("plot_3d_int_go", "Plot")
                           )
                         ),
                         fluidRow(
+                          plotlyOutput('d3_int_plot')
+                        ),
+                        fluidRow(
                           column(width=8,
-                                 h4("Points near click"),
-                                 verbatimTextOutput("click_info")),
+                                 verbatimTextOutput("d3_int_event")),
                           column(width=4,
                                  uiOutput("download_3d_int_plot_button"))
                         )
@@ -215,13 +231,10 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
     )
     user_settings <- reactiveValues(save_width = 45, save_height = 11)
 
-    #  current_ui
-    #})
-
+    # 3D plot reactive event
     plot_3D_button <- eventReactive(input$plot_3d_go, {
-      #input[[paste("obj",k,"x", sep="_")]]
 
-      # generate the pheno type list
+      # generate the phenotype list for selected groupby
       l_pheno <- list()
       for (k in 1:length(list_esets)){
         pheno <- pheno_list[[k]]
@@ -229,6 +242,7 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
       }
       names(l_pheno) <- rep(input$groupby, length(l_pheno))
 
+      # generate list with chosen axis for each eset
       l_axis <-list()
       v_axis<-rep(0,2)
       for (k in 1:length(list_esets)){
@@ -240,6 +254,7 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
       #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
       #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
 
+      # generate the plot
       saved_plots_and_tables$d3_plot <- plotMultiSurface_scale(matrixList=cur_list,
                                                                groupList=l_pheno,
                                                                axisList=l_axis)
@@ -254,53 +269,7 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
       saved_plots_and_tables$d3_plot
     })
 
-    plot_3d_int_button <- eventReactive(input$plot_3d_int_go, {
-      #input[[paste("obj",k,"x", sep="_")]]
-
-      # generate the pheno type list
-      l_pheno <- list()
-      for (k in 1:length(list_esets)){
-        pheno <- pheno_list[[k]]
-        l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby]
-      }
-      names(l_pheno) <- rep(input$groupby, length(l_pheno))
-
-      l_axis <-list()
-      v_axis<-rep(0,2)
-      for (k in 1:length(list_esets)){
-        v_axis[1] <- input[[paste0("obj",k,"x")]]
-        v_axis[2] <- input[[paste0("obj",k,"y")]]
-        l_axis[[k]] <- v_axis
-      }
-
-      # l_axis <- list()
-      # l_axis[[1]] <- c(1,2)
-      # l_axis[[2]] <- c(1,2)
-      # l_axis[[3]] <- c(1,2)
-      #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
-      #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
-
-
-      saved_plots_and_tables$d3_int_plot <- plotMultiSurface_int_scale(matrixList=cur_list,
-                                                               groupList=l_pheno,
-                                                               axisList=l_axis)
-
-      # generate the download button
-      output$download_3d_int_plot_button <- renderUI({
-        div(
-          align = "right",
-          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
-          downloadButton("download_3d_plot", "Download Plot"))
-      })
-      saved_plots_and_tables$d3_int_plot
-    })
-
-    # generate the interactive 3D plot filler
-    output$d3_int_plot <- renderPlot({
-      plot_3d_int_button()
-    })
-
-    # generate the plot filler
+    # generate 3D plot
     output$d3_plot <- renderPlot({
       plot_3D_button()
     })
@@ -315,15 +284,83 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
       },
       contentType = "pdf")
 
+
+
+    plot_3d_int_button <- eventReactive(input$plot_3d_int_go, {
+      #input[[paste("obj",k,"x", sep="_")]]
+
+      # generate the pheno type list
+      l_pheno <- list()
+      for (k in 1:length(list_esets)){
+        pheno <- pheno_list[[k]]
+        l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby_3D]
+      }
+      names(l_pheno) <- rep(input$groupby_3D, length(l_pheno))
+
+      # generate list with chosen axis for each eset
+      l_axis <-list()
+      v_axis<-rep(0,2)
+      for (k in 1:length(list_esets)){
+        v_axis[1] <- input[[paste0("obj_3D",k,"x")]]
+        v_axis[2] <- input[[paste0("obj_3D",k,"y")]]
+        l_axis[[k]] <- v_axis
+      }
+
+      # l_axis <- list()
+      # l_axis[[1]] <- c(1,2)
+      # l_axis[[2]] <- c(1,2)
+      # l_axis[[3]] <- c(1,2)
+      #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
+      #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
+
+      # generate the 3D interactive plot using plotly
+      saved_plots_and_tables$d3_int_plot <- plotMultiSurface_int_scale(matrixList=cur_list,
+                                                               groupList=l_pheno,
+                                                               axisList=l_axis)
+
+      # generate the download button
+      output$download_3d_int_plot_button <- renderUI({
+        div(
+          align = "right",
+          style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
+          downloadButton("download_3d_int_plot", "Download Plot"))
+      })
+
+      # generate the output text
+      output$d3_int_event <- renderPrint({
+        d <- event_data("plotly_hover")
+        if (is.null(d)) "Hover on a point!" else d
+      })
+
+      saved_plots_and_tables$d3_int_plot
+    })
+
+    # output the interactive 3D plot
+    output$d3_int_plot <- renderPlotly({
+      p <- plot_3d_int_button()
+      p$elementId <- NULL
+      p
+    })
+
     # download 3D interactive plot pdf
     output$download_3d_int_plot <- downloadHandler(
-      filename = function() {"threeD_interactive_plot.pdf"},
+      filename = function() {"threeD_interactive_plot.png"},
       content = function(file) {
-        pdf(file, width = 6,height = 4)
-        print(saved_plots_and_tables$d3_plot)
-        dev.off()
-      },
-      contentType = "pdf")
+        #if (requireNamespace("RSelenium")) {
+          rD <- RSelenium::rsDriver(port = 4569L, browser = "chrome")
+          tmpFile <- tempfile(fileext = ".png")
+          export(saved_plots_and_tables$d3_int_plot, tmpFile, rD)
+          browseURL(tmpFile)
+        #}
+        #tmpFile <- tempfile(fileext = ".png")
+        #export(saved_plots_and_tables$d3_int_plot, file = tmpFile)
+        #browseURL(tmpFile)
+        # Need a personal account to do this:
+        #Sys.setenv("plotly_username" = "Greally_Lab")
+        #Sys.setenv("plotly_api_key" = "GreallyLab1")
+        # plotly_IMAGE(saved_plots_and_tables$d3_int_plot, format = "png",
+        #             out_file = file)
+      })
 
     # TODO: fix brush click
     output$click_info = renderPrint({
@@ -369,3 +406,4 @@ slinky_scale_live2(list_sample[1:2])
 
 ### cell proportion
 ### fix the aesthetics ''/
+webshot::install_phantomjs()
