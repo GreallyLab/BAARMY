@@ -38,7 +38,7 @@ source("R/plotMultiSurface_scale.R")
 
 
 # this is the long slinky live function
-slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
+slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                         options = list(port = 42427), ...) {
   # a bunch of stop if inappropriate data given
   if(!(is(list_esets, 'list'))){
@@ -90,7 +90,12 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
     cur_list[[i]] <- prcomp(na.omit(eset_expr))$rotation
   }
   # get axis choices for ui
-  axis_choice <- colnames(cur_list[[i]])
+  axis_choice <- colnames(cur_list[[1]])
+
+  l_axis_choices <- list()
+  for (i in 1:length(list_esets)) {
+    l_axis_choices[[i]] <- colnames(cur_list[[i]])
+  }
 
   # Things needed for plot function:
   #list of PC matrices, group to color by, list of vectors PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
@@ -118,6 +123,42 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
                       )
                )),
     navbarMenu('Visualize',
+               # 2D plots
+               tabPanel('2D plots',
+                        fluidRow(
+                          div(h1('2D Plots'), align = 'center')
+                        ),
+                        fluidRow(
+                          p("You can make two dimensional plots by selecting the dataset
+                            and the axes that you Please select which dataset that you
+                            wish to view"),
+                          p("Please select the dataset that you which to view.
+                            The dataset number is determined by their order in
+                            the list_esets argument.")
+                        ),
+                        fluidRow(
+                          column(6,offset = 3,
+                                 selectInput('dataset_choice', label = 'dataset:',
+                                             choices = as.character(seq(1, length(list_esets),1)), selected = "1")
+                          )
+                        ),
+                        uiOutput("d2_groupby_controls"),
+                        uiOutput("d2_axis_controls"),
+                        fluidRow(
+                          column(10, offset= .5,
+                                 actionButton("plot_2d_int_go", "Plot")
+                          )
+                        ),
+                        fluidRow(
+                          plotlyOutput('d2_int_plot')
+                        ),
+                        fluidRow(
+                          column(width=8,
+                                 verbatimTextOutput("d2_int_event")
+                          )
+                        )
+
+               ),
                # non-interactive 3D plot
                tabPanel('3D plot',
                         fluidRow(
@@ -227,9 +268,100 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
     saved_plots_and_tables <- reactiveValues(
       d3_plot = NULL,
       d3_int_plot = NULL,
-      d3_cellProp_plot = NULL
+      d3_cellProp_plot = NULL,
+      d2_int_plot = NULL
     )
     user_settings <- reactiveValues(save_width = 45, save_height = 11)
+
+    ############################################################################
+    ################## Creating the 2D interactive plot ########################
+    ############################################################################
+
+    # generate the axis control UI based on dataset input
+    output$d2_groupby_controls <- renderUI({
+      dataset_num <- input$dataset_choice
+      fluidRow(
+        column(6,offset = 3,
+               selectInput("groupby_2d_int",
+                           label = 'color by:',
+                           choices = eset_var_final,
+                           selected = eset_var_final[1])
+        )
+      )
+    })
+
+    output$d2_axis_controls <- renderUI({
+      # dataset_num <- 1
+      dataset_num <- input$dataset_choice
+      d2_axes <- l_axis_choices[[dataset_num]]
+      fluidRow(
+        column(3, offset = 2,
+               selectInput(inputId = "d2_int_xaxis",
+                           label = paste0("Dataset ",dataset_num," x-axis:"),
+                           choices = axis_choice,
+                           selected = axis_choice[1])
+        ),
+        column(3, offset = 2,
+               selectInput(inputId = "d2_int_yaxis",
+                           label = paste0("Dataset ",dataset_num," y-axis:"),
+                           choices = axis_choice,
+                           selected = axis_choice[2])
+        )
+      )
+    })
+
+    # 2D plot reactive event
+    plot_2d_int_button <- eventReactive(input$plot_2d_int_go, {
+      # input$dataset_choice <- 1
+
+      # generate vector with chosen axes for each eset
+      v_axis <- NULL
+      v_axis <- c(input$d2_int_xaxis, input$d2_int_yaxis)
+      # v_axis <- c("PC1", "PC2")
+
+      # grab correct dataset and get correct columns to graph
+      dataset_2d_int <- NULL
+      dataset_2d_int <- cur_list[[input$dataset_choice]]
+      dataset_2d_int <- dataset_2d_int[,colnames(dataset_2d_int) == v_axis]
+
+      # get vector of phenotype selected by  groupby
+      v_pheno <- NULL
+      pheno <- pheno_list[[input$dataset_choice]]
+      groupby_d2 <- NULL
+      groupby_d2 <- input$groupby_2d_int
+      v_pheno <- pheno[,colnames(pheno) == groupby_d2]
+
+      # make dataframe containing data and phenotype for plotting
+      df_2d_int <- data.frame(x = dataset_2d_int[,1], y = dataset_2d_int[,2],
+                              phenotype = v_pheno)
+
+      # generate the plot ### NEED TO BUILD FUNCTION ###
+      saved_plots_and_tables$d2_int_plot <-
+        plot_ly(data = df_2d_int, x= ~x, y= ~y,
+                color = ~phenotype, colors = "Dark2")
+
+      # There is no download button because the plot is made with plotly
+
+      # generate the output text
+      output$d2_int_event <- renderPrint({
+        d <- event_data("plotly_hover")
+        if (is.null(d)) "Hover on a point!" else d
+      })
+
+      saved_plots_and_tables$d2_int_plot
+    })
+
+
+    # output the interactive 2D plot
+    output$d2_int_plot <- renderPlotly({
+      p <- plot_2d_int_button()
+      p$elementId <- NULL
+      p
+    })
+
+    ############################################################################
+    ######################## Creating the 3D plot ##############################
+    ############################################################################
 
     # 3D plot reactive event
     plot_3D_button <- eventReactive(input$plot_3d_go, {
@@ -403,7 +535,10 @@ slinky_scale_live2 <- function(list_esets, cell_prop=NULL,
 }
 
 slinky_scale_live2(list_sample[1:2])
+slinky_scale_live3(list_sample[1:5])
+
 
 ### cell proportion
 ### fix the aesthetics ''/
 webshot::install_phantomjs()
+??ExpressionSet
