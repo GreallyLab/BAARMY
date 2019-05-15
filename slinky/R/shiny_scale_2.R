@@ -31,6 +31,7 @@ list_sample[[1]] <- obj1
 list_sample[[2]] <- obj2
 list_sample[[3]] <- obj3
 list_esets <- list_sample[1:3]
+ 
 slinky_scale_live(list_sample)
 
 # need to source any functions created for testing
@@ -39,7 +40,7 @@ source("R/plotMultiSurface_scale.R")
 
 # this is the long slinky live function
 slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
-                        options = list(port = 42427), ...) {
+                               options = list(port = 42427), ...) {
   # a bunch of stop if inappropriate data given
   if(!(is(list_esets, 'list'))){
     stop("Please supply a list of expression sets for list_eset before running this command")
@@ -49,7 +50,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                at least two expression sets in list before running this command", sep=""))
   }
   # TODO: write stops if list is not composed of esets
-
+  
   # STOPs if required pacakges are not downloaded (this is largely uneccesary once part of the package)
   if ( !require('shiny') ) {
     stop("'slinky_live()' requires 'shiny'. Please install it using
@@ -63,7 +64,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
     stop("'slinky_live()' requires 'RColorBrewer'. Please install it using
          install.packages('RColorBrewer')")
   }
-
+  
   # This code manipulates the esets to ready them for input into plot functions
   # This could be put into seperate functions, but is not too cumbersome at the moment.
   # get pheno data
@@ -91,18 +92,18 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
   }
   # get axis choices for ui
   axis_choice <- colnames(cur_list[[1]])
-
+  
   l_axis_choices <- list()
   for (i in 1:length(list_esets)) {
     l_axis_choices[[i]] <- colnames(cur_list[[i]])
   }
-
+  
   # Things needed for plot function:
   #list of PC matrices, group to color by, list of vectors PCs to plot (obj1_x, obj1_y, obj2_x, obj2_y)
   # cur_list = PC matrices
   # group vectors  = group to color by
   # axis_choice = vectors to plot by
-
+  
   # generate the UI using this command
   p_layout <- navbarPage(
     a('slinky', href = 'https://github.com/GreallyLab/BAARMY', target = '_blank',
@@ -135,7 +136,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                           p("Please select the dataset that you which to view.
                             The dataset number is determined by their order in
                             the list_esets argument.")
-                        ),
+                          ),
                         fluidRow(
                           column(6,offset = 3,
                                  selectInput('dataset_choice', label = 'dataset:',
@@ -157,8 +158,8 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                                  verbatimTextOutput("d2_int_event")
                           )
                         )
-
-               ),
+                        
+                          ),
                # non-interactive 3D plot
                tabPanel('3D plot',
                         fluidRow(
@@ -172,17 +173,17 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                         lapply(1:length(list_esets), function(k) {
                           fluidRow(
                             column(3, offset = 2,
-                              selectInput(paste0("obj",k,"x"),
-                                          paste0("object ",k," x-axis:"),
-                                      choices = axis_choice,
-                                      selected = NULL)
-                              ),
-                              column(3, offset = 2,
-                                     selectInput(paste0("obj",k,"y"),
-                                                 paste0("object ",k," y-axis:"),
-                                                 choices = axis_choice,
-                                                 selected = NULL)
-                              )
+                                   selectInput(paste0("obj",k,"x"),
+                                               paste0("object ",k," x-axis:"),
+                                               choices = axis_choice,
+                                               selected = NULL)
+                            ),
+                            column(3, offset = 2,
+                                   selectInput(paste0("obj",k,"y"),
+                                               paste0("object ",k," y-axis:"),
+                                               choices = axis_choice,
+                                               selected = NULL)
+                            )
                           )
                         }),
                         fluidRow(
@@ -238,7 +239,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                           column(width=4,
                                  uiOutput("download_3d_int_plot_button"))
                         )
-
+                        
                ),
                if (!(is.null(cell_prop))){
                  tabPanel('Cell Proportion',
@@ -256,12 +257,12 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
                           fluidRow(
                             uiOutput("download_adjusted_plot_button")
                           )
-                        )
+                          )
                }
+               )
     )
-  )
-
-
+  
+  
   # server function
   server_fun <- function(input, output) {
     # Reactive master object that stores all plots and tables for downloading later
@@ -272,11 +273,11 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
       d2_int_plot = NULL
     )
     user_settings <- reactiveValues(save_width = 45, save_height = 11)
-
+    
     ############################################################################
     ################## Creating the 2D interactive plot ########################
     ############################################################################
-
+    
     # generate the axis control UI based on dataset input
     output$d2_groupby_controls <- renderUI({
       dataset_num <- input$dataset_choice
@@ -289,7 +290,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         )
       )
     })
-
+    
     output$d2_axis_controls <- renderUI({
       # dataset_num <- 1
       dataset_num <- input$dataset_choice
@@ -309,63 +310,63 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         )
       )
     })
-
+    
     # 2D plot reactive event
     plot_2d_int_button <- eventReactive(input$plot_2d_int_go, {
       # input$dataset_choice <- 1
-
+      
       # generate vector with chosen axes for each eset
       v_axis <- NULL
       v_axis <- c(input$d2_int_xaxis, input$d2_int_yaxis)
       # v_axis <- c("PC1", "PC2")
-
+      
       # grab correct dataset and get correct columns to graph
       dataset_2d_int <- NULL
       dataset_2d_int <- cur_list[[input$dataset_choice]]
       dataset_2d_int <- dataset_2d_int[,colnames(dataset_2d_int) == v_axis]
-
+      
       # get vector of phenotype selected by  groupby
       v_pheno <- NULL
       pheno <- pheno_list[[input$dataset_choice]]
       groupby_d2 <- NULL
       groupby_d2 <- input$groupby_2d_int
       v_pheno <- pheno[,colnames(pheno) == groupby_d2]
-
+      
       # make dataframe containing data and phenotype for plotting
       df_2d_int <- data.frame(x = dataset_2d_int[,1], y = dataset_2d_int[,2],
                               phenotype = v_pheno)
-
+      
       # generate the plot ### NEED TO BUILD FUNCTION ###
       saved_plots_and_tables$d2_int_plot <-
         plot_ly(data = df_2d_int, x= ~x, y= ~y,
                 color = ~phenotype, colors = "Dark2")
-
+      
       # There is no download button because the plot is made with plotly
-
+      
       # generate the output text
       output$d2_int_event <- renderPrint({
         d <- event_data("plotly_hover")
         if (is.null(d)) "Hover on a point!" else d
       })
-
+      
       saved_plots_and_tables$d2_int_plot
     })
-
-
+    
+    
     # output the interactive 2D plot
     output$d2_int_plot <- renderPlotly({
       p <- plot_2d_int_button()
       p$elementId <- NULL
       p
     })
-
+    
     ############################################################################
     ######################## Creating the 3D plot ##############################
     ############################################################################
-
+    
     # 3D plot reactive event
     plot_3D_button <- eventReactive(input$plot_3d_go, {
-
+      
       # generate the phenotype list for selected groupby
       l_pheno <- list()
       for (k in 1:length(list_esets)){
@@ -373,7 +374,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby]
       }
       names(l_pheno) <- rep(input$groupby, length(l_pheno))
-
+      
       # generate list with chosen axis for each eset
       l_axis <-list()
       v_axis<-rep(0,2)
@@ -382,15 +383,15 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         v_axis[2] <- input[[paste0("obj",k,"y")]]
         l_axis[[k]] <- v_axis
       }
-
+      
       #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
       #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
-
+      
       # generate the plot
       saved_plots_and_tables$d3_plot <- plotMultiSurface_scale(matrixList=cur_list,
                                                                groupList=l_pheno,
                                                                axisList=l_axis)
-
+      
       # generate the download button
       output$download_3d_plot_button <- renderUI({
         div(
@@ -400,12 +401,12 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
       })
       saved_plots_and_tables$d3_plot
     })
-
+    
     # generate 3D plot
     output$d3_plot <- renderPlot({
       plot_3D_button()
     })
-
+    
     # download 3D plot pdf
     output$download_3d_plot <- downloadHandler(
       filename = function() {"threeD_plot.pdf"},
@@ -415,12 +416,12 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         dev.off()
       },
       contentType = "pdf")
-
-
-
+    
+    
+    
     plot_3d_int_button <- eventReactive(input$plot_3d_int_go, {
       #input[[paste("obj",k,"x", sep="_")]]
-
+      
       # generate the pheno type list
       l_pheno <- list()
       for (k in 1:length(list_esets)){
@@ -428,7 +429,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         l_pheno[[k]] <- pheno[,colnames(pheno)==input$groupby_3D]
       }
       names(l_pheno) <- rep(input$groupby_3D, length(l_pheno))
-
+      
       # generate list with chosen axis for each eset
       l_axis <-list()
       v_axis<-rep(0,2)
@@ -437,19 +438,19 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         v_axis[2] <- input[[paste0("obj_3D",k,"y")]]
         l_axis[[k]] <- v_axis
       }
-
+      
       # l_axis <- list()
       # l_axis[[1]] <- c(1,2)
       # l_axis[[2]] <- c(1,2)
       # l_axis[[3]] <- c(1,2)
       #group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
       #group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
-
+      
       # generate the 3D interactive plot using plotly
       saved_plots_and_tables$d3_int_plot <- plotMultiSurface_int_scale(matrixList=cur_list,
-                                                               groupList=l_pheno,
-                                                               axisList=l_axis)
-
+                                                                       groupList=l_pheno,
+                                                                       axisList=l_axis)
+      
       # generate the download button
       output$download_3d_int_plot_button <- renderUI({
         div(
@@ -457,32 +458,32 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
           style = "margin-right:15px; margin-top: 10px; margin-bottom:10px",
           downloadButton("download_3d_int_plot", "Download Plot"))
       })
-
+      
       # generate the output text
       output$d3_int_event <- renderPrint({
         d <- event_data("plotly_hover")
         if (is.null(d)) "Hover on a point!" else d
       })
-
+      
       saved_plots_and_tables$d3_int_plot
     })
-
+    
     # output the interactive 3D plot
     output$d3_int_plot <- renderPlotly({
       p <- plot_3d_int_button()
       p$elementId <- NULL
       p
     })
-
+    
     # download 3D interactive plot pdf
     output$download_3d_int_plot <- downloadHandler(
       filename = function() {"threeD_interactive_plot.png"},
       content = function(file) {
         #if (requireNamespace("RSelenium")) {
-          rD <- RSelenium::rsDriver(port = 4569L, browser = "chrome")
-          tmpFile <- tempfile(fileext = ".png")
-          export(saved_plots_and_tables$d3_int_plot, tmpFile, rD)
-          browseURL(tmpFile)
+        rD <- RSelenium::rsDriver(port = 4569L, browser = "chrome")
+        tmpFile <- tempfile(fileext = ".png")
+        export(saved_plots_and_tables$d3_int_plot, tmpFile, rD)
+        browseURL(tmpFile)
         #}
         #tmpFile <- tempfile(fileext = ".png")
         #export(saved_plots_and_tables$d3_int_plot, file = tmpFile)
@@ -493,16 +494,16 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         # plotly_IMAGE(saved_plots_and_tables$d3_int_plot, format = "png",
         #             out_file = file)
       })
-
+    
     # TODO: fix brush click
     output$click_info = renderPrint({
       nearPoints(obj1_pheno,input$plot1_click,addDist = TRUE)
     })
-
+    
     # plot the adjusted graph for cell subtype prop
     if (!(is.null(cell_prop))){
       plot_button <- eventReactive(input$plot_adjust_go, {
-
+        
         group1 <- obj1_pheno[,colnames(obj1_pheno)==input$groupby]
         group2 <- obj2_pheno[,colnames(obj2_pheno)==input$groupby]
         saved_plots_and_tables$d3_cellProp_plot <- plotMultiSurface(pca1, pca2, group1=group1,group2=group2,
@@ -517,7 +518,7 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         })
         saved_plots_and_tables$d3_cellProp_plot
       })
-
+      
       # download cell prop adjusted plot pdf
       output$download_adjust_plot <- downloadHandler(
         filename = function() {"threeD_cellPropAdj_plot.pdf"},
@@ -529,10 +530,10 @@ slinky_scale_live3 <- function(list_esets, cell_prop=NULL,
         contentType = "pdf")
     }
   }
-
+  
   # initilize shiny
   shinyApp(ui = p_layout, server = server_fun, options = "launch.browser")
-}
+  }
 
 slinky_scale_live2(list_sample[1:2])
 slinky_scale_live3(list_sample[1:5])

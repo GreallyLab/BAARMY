@@ -4,8 +4,7 @@ obj2 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_
 obj3 <- readRDS("/Volumes/home/greally-lab/Hackathon/social_isolation_data/eset_Y10_ov_updated.RDS")
 
 
-
-source("R/plotMultiSurface_scale.R")
+source("slinky/R/plotMultiSurface_scale.R")
 devtools::install_github("ropensci/plotly", force=TRUE)
 library(plotly)
 library(RSelenium)

@@ -1,5 +1,5 @@
 # This is a demo script for Slinky#
-source("R/plotMultiSurface_scale.R")
+source("slinky/R/plotMultiSurface_scale.R")
 
 library(scatterplot3d)
 library(shinythemes)
@@ -23,10 +23,10 @@ list_sample[[5]] <- obj5
 
 #slinky_scale_live(list_sample[1])
 
-slinky_scale_live(list_sample[1:2])
-slinky_scale_live(list_sample[2:3])
-slinky_scale_live(list_sample[1:4])
-slinky_scale_live(list_sample[1:5])
+slinky_scale_live3(list_sample[1:2])
+slinky_scale_live3(list_sample[2:3])
+slinky_scale_live3(list_sample[1:4])
+slinky_scale_live3(list_sample[1:5])
 
 
 
